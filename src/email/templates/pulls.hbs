@@ -1,0 +1,8 @@
+{{#> layout}}
+<div>Count of pull requests: {{ len pulls }}</div>
+<ul>
+  {{#each pulls}}
+    <li>{{ title }}, {{ author.login }}</li>
+  {{/each}}
+</ul>
+{{/layout}}

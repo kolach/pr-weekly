@@ -1,0 +1,22 @@
+query PullRequestsView($query: String!) {
+  search(query: $query, type: ISSUE, last: 100) {
+    edges {
+      __typename
+      node {
+        __typename
+        ... on PullRequest {
+          __typename
+          author {
+            __typename
+            login
+          }
+          url
+          title
+          bodyText
+          createdAt
+        }
+      }
+    }
+  }
+}
+
