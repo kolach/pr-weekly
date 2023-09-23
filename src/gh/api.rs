@@ -5,7 +5,9 @@ type URI = String;
 
 type DateTime = String;
 
-type GitTimestamp = String;
+type HTML = String;
+
+// type GitTimestamp = String;
 
 #[derive(GraphQLQuery)]
 #[graphql(

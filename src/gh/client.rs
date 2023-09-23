@@ -3,7 +3,7 @@ use std::result::Result;
 
 use super::api::{pull_requests_view, PullRequestsView};
 use super::error::GithubError;
-use super::pull_requests_view::PullRequestsViewSearchEdgesNode;
+use super::pull_requests_view::{PullRequestsViewSearchEdgesNode, PullRequestsViewSearchEdgesNodeOnPullRequest};
 
 #[derive(Clone)]
 pub struct Client {
@@ -19,7 +19,7 @@ impl Client {
     pub async fn pull_requests<V>(
         &self,
         variables: V,
-    ) -> Result<Option<Vec<PullRequestsViewSearchEdgesNode>>, GithubError>
+    ) -> Result<Option<Vec<PullRequestsViewSearchEdgesNodeOnPullRequest>>, GithubError>
     where
         V: Into<pull_requests_view::Variables>,
     {
@@ -36,8 +36,13 @@ impl Client {
                 edges
                     .into_iter()
                     .flatten()
-                    .map(|edge| edge.node)
-                    .flatten()
+                    .filter_map(|edge| edge.node)
+                    .filter_map(|node| {
+                        if let PullRequestsViewSearchEdgesNode::PullRequest(pr) = node {
+                            return Some(pr);
+                        }
+                        None
+                    })
                     .collect::<Vec<_>>()
             });
 

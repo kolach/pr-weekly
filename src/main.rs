@@ -24,7 +24,7 @@ async fn main() -> Result<(), anyhow::Error> {
         .pull_requests(gh::pull_requests_view::Variables { query })
         .await?;
 
-    info!(data = serde_json::to_string(&pull_requests).unwrap());
+    // info!(data = serde_json::to_string(&pull_requests).unwrap());
 
     if let Some(pull_requests) = pull_requests {
         let content = email::render(&pull_requests)?;

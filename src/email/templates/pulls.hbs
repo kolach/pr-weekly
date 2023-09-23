@@ -2,7 +2,11 @@
 <div>Count of pull requests: {{ len pulls }}</div>
 <ul>
   {{#each pulls}}
-    <li>{{ title }}, {{ author.login }}</li>
+    <li>
+      <h2>{{ title }}<h2>
+      {{ bodyHTML }}
+      <span>{{ author.login }}</span>
+    </li>
   {{/each}}
 </ul>
 {{/layout}}
