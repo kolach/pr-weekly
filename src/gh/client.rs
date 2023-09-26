@@ -3,7 +3,9 @@ use std::result::Result;
 
 use super::api::{pull_requests_view, PullRequestsView};
 use super::error::GithubError;
-use super::pull_requests_view::{PullRequestsViewSearchEdgesNode, PullRequestsViewSearchEdgesNodeOnPullRequest};
+use super::pull_requests_view::{
+    PullRequestsViewSearchEdgesNode, PullRequestsViewSearchEdgesNodeOnPullRequest,
+};
 
 #[derive(Clone)]
 pub struct Client {

@@ -8,19 +8,17 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.75"
 chrono = { version = "0.4.31", features = ["serde"] }
-env_logger = "0.10.0"
+clap = { version = "4.4.5", features = ["derive", "env"] }
+dotenv = { version = "0.15.0", features = ["clap"] }
 graphql_client = { version = "0.13.0", features = ["reqwest"] }
 handlebars = { version = "4.4.0", features = ["rust-embed"] }
-json_env_logger = { version = "0.1.1", features = ["iso-timestamps"] }
-kv-log-macro = "1.0.7"
-log = ">=0.4.13, <0.4.14"
+lettre = { version = "0.10.4", features = ["tokio1", "tokio1-native-tls"] }
 reqwest = { version = "0.11.20", features = ["json"] }
 rust-embed = "8.0.0"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
-this = "0.3.0"
 thiserror = "1.0.48"
 tokio = { version = "1.32.0", features = ["full"] }
 tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.17", features = ["json"]}
+tracing-subscriber = { version = "0.3.17", features = ["json", "env-filter"]}
 url = "2.4.1"

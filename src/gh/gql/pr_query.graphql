@@ -12,7 +12,6 @@ query PullRequestsView($query: String!) {
           }
           url
           title
-          bodyText
           bodyHTML
           createdAt
         }
@@ -20,4 +19,3 @@ query PullRequestsView($query: String!) {
     }
   }
 }
-

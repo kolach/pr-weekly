@@ -1,12 +1,11 @@
-{{#> layout}}
-<div>Count of pull requests: {{ len pulls }}</div>
-<ul>
-  {{#each pulls}}
-    <li>
-      <h2>{{ title }}<h2>
-      {{ bodyHTML }}
-      <span>{{ author.login }}</span>
-    </li>
-  {{/each}}
-</ul>
-{{/layout}}
+{{#> layout.hbs}}
+{{#each pulls}}
+  <div class="pr">
+    <a href="{{ url }}">
+      <h2>{{ title }}</h2>
+    </a>
+    {{ bodyHTML }}
+    <span>{{ author.login }}</span>
+  </div>
+{{/each}}
+{{/layout.hbs}}
