@@ -12,4 +12,16 @@ pub enum EmailError {
         #[from]
         source: handlebars::RenderError,
     },
+
+    #[error("Transport SMTP error: {source:?}")]
+    TransportSmtpError {
+        #[from]
+        source: lettre::transport::smtp::Error,
+    },
+
+    #[error("Email error: {source:?}")]
+    EmailError {
+        #[from]
+        source: lettre::error::Error,
+    },
 }
