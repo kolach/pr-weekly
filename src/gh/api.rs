@@ -1,14 +1,7 @@
 use graphql_client::GraphQLQuery;
-
-#[allow(clippy::upper_case_acronyms)]
-type URI = String;
-
-type DateTime = String;
-
-type HTML = String;
+use serde::Serialize;
 
 // type GitTimestamp = String;
-
 #[derive(GraphQLQuery)]
 #[graphql(
     schema_path = "src/gh/gql/schema.graphql",
@@ -16,3 +9,11 @@ type HTML = String;
     response_derives = "Debug, Serialize"
 )]
 pub struct PullRequestsView;
+
+#[derive(Default, Debug, Serialize)]
+pub struct Summary {
+    pub open: i32,
+    pub closed: i32,
+    pub merged: i32,
+    pub draft: i32,
+}

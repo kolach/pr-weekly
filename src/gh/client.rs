@@ -1,16 +1,28 @@
+use chrono::{Duration, Utc};
 use graphql_client::{GraphQLQuery, Response};
 use std::result::Result;
 
 use super::api::{pull_requests_view, PullRequestsView};
 use super::error::GithubError;
-use super::pull_requests_view::{
-    PullRequestsViewSearchEdgesNode, PullRequestsViewSearchEdgesNodeOnPullRequest,
-};
+use super::pull_requests_view::{PullRequestState, PullRequestsViewSearchEdgesNode};
+use super::Summary;
 
 #[derive(Clone)]
 pub struct Client {
     endpoint_url: reqwest::Url,
     client: reqwest::Client,
+}
+
+// Compose GH GQL query to get pull requests
+fn week_query(repo: &str) -> String {
+    // Get the current UTC date and time
+    let current_date_time = Utc::now();
+    // Subtract 7 days from the current date
+    let seven_days_ago = current_date_time - Duration::days(7);
+    // Format the date as a string in 'YYYY-MM-DD' format
+    let formatted_date = seven_days_ago.format("%Y-%m-%d").to_string();
+
+    format!("repo:{} is:pr created:>{}", repo, formatted_date)
 }
 
 impl Client {
@@ -47,17 +59,15 @@ impl Client {
         }
     }
 
-    // Makes API requests and transforms response into a list of PR-like structures
-    pub async fn pull_requests<V>(
-        &self,
-        variables: V,
-    ) -> Result<Vec<PullRequestsViewSearchEdgesNodeOnPullRequest>, GithubError>
-    where
-        V: Into<pull_requests_view::Variables>,
-    {
+    // Makes API requests and transforms response into PR summary
+    pub async fn pull_requests_summary(&self, repo: &str) -> Result<Option<Summary>, GithubError> {
+        let query = week_query(repo);
+        let variables = pull_requests_view::Variables { query };
         let response_body = self.post_graphql(variables).await?;
 
-        let prs = response_body
+        // let mut summary = Summary::default();
+
+        let summary = response_body
             .data
             .map(|data| data.search)
             .and_then(|search| search.edges)
@@ -72,10 +82,21 @@ impl Client {
                         }
                         None
                     })
-                    .collect::<Vec<_>>()
+                    .fold(Summary::default(), |mut sum, pr| {
+                        if pr.is_draft {
+                            sum.draft += 1;
+                        }
+                        match pr.state {
+                            PullRequestState::CLOSED => sum.closed += 1,
+                            PullRequestState::MERGED => sum.merged += 1,
+                            PullRequestState::OPEN => sum.open += 1,
+                            _ => (),
+                        }
+                        sum
+                    })
             });
 
-        Ok(prs.unwrap_or(vec![]))
+        Ok(summary)
     }
 }
 
