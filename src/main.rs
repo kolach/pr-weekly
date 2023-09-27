@@ -2,16 +2,12 @@ mod email;
 mod gh;
 
 use chrono::{Duration, Utc};
-// use kv_log_macro as log;
 use clap::Parser;
 use lettre::message::Mailbox;
-use std::fs::File;
-use std::io::Write;
 use tracing::*;
-use tracing_subscriber::filter::EnvFilter;
-use tracing_subscriber::{fmt, prelude::*};
+use tracing_subscriber::{filter::EnvFilter, fmt, prelude::*};
 
-/// Simple program to greet a person
+/// Command args
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
@@ -28,7 +24,7 @@ struct Args {
     github_api_token: String,
 
     /// Email address to send report
-    #[arg(short, long)]
+    #[arg(short, long, env)]
     send_to: Mailbox,
 
     /// Email is sent from
@@ -102,7 +98,7 @@ async fn main() -> Result<(), anyhow::Error> {
 
     // info!(data = serde_json::to_string(&pull_requests).unwrap());
 
-    if let Some(pull_requests) = pull_requests {
+    if !pull_requests.is_empty() {
         info!(pr_count = pull_requests.len());
 
         let subject = format!("{} PRs in last 7 days", args.repo);
@@ -120,11 +116,6 @@ async fn main() -> Result<(), anyhow::Error> {
         sender
             .send(&subject, args.from, args.send_to, content)
             .await?;
-
-        // // Create a file
-        // let mut html_file = File::create("index.html").expect("creation failed");
-        // // Write contents to the file
-        // html_file.write(content.as_bytes()).expect("write failed");
     } else {
         warn!("No PR found for the last 7 days");
     }

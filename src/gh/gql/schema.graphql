@@ -4252,6 +4252,9 @@ type PullRequest implements Assignable & Closable & Comment & Labelable & Lockab
   "The body rendered to text."
   bodyText: String!
 
+  "Identifies if the pull request is a draft."
+  isDraft: Boolean!
+
   "The number of changed files in this pull request."
   changedFiles: Int!
 

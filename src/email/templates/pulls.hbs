@@ -5,7 +5,12 @@
       <h2>{{ title }}</h2>
     </a>
     {{ bodyHTML }}
-    <span>{{ author.login }}</span>
+    <div class="footer">
+      {{#if isDraft}}
+        <span class="draft">Draft</span>
+      {{/if}}
+      <span class="author">by: {{ author.login }}</span>
+    </div>
   </div>
 {{/each}}
 {{/layout.hbs}}

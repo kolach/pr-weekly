@@ -13,6 +13,7 @@ query PullRequestsView($query: String!) {
           url
           title
           bodyHTML
+          isDraft
           createdAt
         }
       }

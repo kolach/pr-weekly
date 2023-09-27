@@ -13,4 +13,10 @@ pub enum GithubError {
         #[from]
         source: url::ParseError,
     },
+
+    #[error("unauthorized request, check your GITHUB_API_TOKEN")]
+    Unauthorized,
+
+    #[error("failure: {errors:?}")]
+    QueryError { errors: Vec<graphql_client::Error> },
 }

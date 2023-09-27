@@ -1,4 +1,4 @@
-use graphql_client::reqwest::post_graphql;
+use graphql_client::{GraphQLQuery, Response};
 use std::result::Result;
 
 use super::api::{pull_requests_view, PullRequestsView};
@@ -18,17 +18,44 @@ impl Client {
         GithubBuilder::new()
     }
 
-    pub async fn pull_requests<V>(
+    // Here we check the HTTP response and convert it to our grapth ql response body.
+    // This is a place to handle the error responses from GitHub API service
+    async fn post_graphql<V>(
         &self,
         variables: V,
-    ) -> Result<Option<Vec<PullRequestsViewSearchEdgesNodeOnPullRequest>>, GithubError>
+    ) -> Result<Response<<PullRequestsView as GraphQLQuery>::ResponseData>, GithubError>
     where
         V: Into<pull_requests_view::Variables>,
     {
         let endpoint_url = self.endpoint_url.clone();
-        let variables = variables.into();
-        let response_body =
-            post_graphql::<PullRequestsView, _>(&self.client, endpoint_url, variables).await?;
+        let body = PullRequestsView::build_query(variables.into());
+        let reqwest_response = self.client.post(endpoint_url).json(&body).send().await?;
+
+        match reqwest_response.status() {
+            reqwest::StatusCode::UNAUTHORIZED => Err(GithubError::Unauthorized),
+            _ => {
+                let response_body: Response<_> = reqwest_response.json().await?;
+                if let Some(errors) = response_body.errors {
+                    // This check is for GH response errors.
+                    // For example if number of records to fetch exceeds 100,
+                    // GH will respond with HTTP status 200 OK but there will
+                    // be a error message.
+                    return Err(GithubError::QueryError { errors });
+                }
+                Ok(response_body)
+            }
+        }
+    }
+
+    // Makes API requests and transforms response into a list of PR-like structures
+    pub async fn pull_requests<V>(
+        &self,
+        variables: V,
+    ) -> Result<Vec<PullRequestsViewSearchEdgesNodeOnPullRequest>, GithubError>
+    where
+        V: Into<pull_requests_view::Variables>,
+    {
+        let response_body = self.post_graphql(variables).await?;
 
         let prs = response_body
             .data
@@ -48,7 +75,7 @@ impl Client {
                     .collect::<Vec<_>>()
             });
 
-        Ok(prs)
+        Ok(prs.unwrap_or(vec![]))
     }
 }
 
