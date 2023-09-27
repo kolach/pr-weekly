@@ -6,15 +6,8 @@ query PullRequestsView($query: String!) {
         __typename
         ... on PullRequest {
           __typename
-          author {
-            __typename
-            login
-          }
-          url
-          title
-          bodyHTML
+          state
           isDraft
-          createdAt
         }
       }
     }

@@ -1,0 +1,23 @@
+
+{{#> layout.hbs}}
+<table>
+  <tbody>
+    <tr>
+      <td class="state">Open</td>
+      <td class="value">{{ summary.open }}</td>
+    </td>
+    <tr>
+      <td class="state">Closed</td>
+      <td class="value">{{ summary.closed }}</td>
+    </td>
+    <tr>
+      <td class="state">Merged</td>
+      <td class="value">{{ summary.merged }}</td>
+    </td>
+    <tr>
+      <td class="state">Draft</td>
+      <td class="value">{{ summary.draft }}</td>
+    </td>
+  </tbody>
+</table>
+{{/layout.hbs}}

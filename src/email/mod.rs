@@ -12,7 +12,7 @@ use serde::Serialize;
 #[folder = "src/email/templates"]
 struct Assets;
 
-pub fn render<T>(subject: &str, pulls: &Vec<T>) -> Result<String, EmailError>
+pub fn render<T>(subject: &str, pulls: T) -> Result<String, EmailError>
 where
     T: Serialize,
 {
@@ -22,10 +22,10 @@ where
 
     let data = serde_json::json!({
         "subject": subject,
-        "pulls": pulls,
+        "summary": pulls,
     });
 
-    let content = hbs.render("pulls.hbs", &data)?;
+    let content = hbs.render("summary.hbs", &data)?;
 
     Ok(content)
 }

@@ -1,7 +1,6 @@
 mod email;
 mod gh;
 
-use chrono::{Duration, Utc};
 use clap::Parser;
 use lettre::message::Mailbox;
 use tracing::*;
@@ -48,23 +47,6 @@ struct Args {
     smtp_pass: String,
 }
 
-impl Args {
-    // Compose GH GQL query to get pull requests
-    fn query(&self) -> String {
-        // Get the current UTC date and time
-        let current_date_time = Utc::now();
-        // Subtract 7 days from the current date
-        let seven_days_ago = current_date_time - Duration::days(7);
-        // Format the date as a string in 'YYYY-MM-DD' format
-        let formatted_date = seven_days_ago.format("%Y-%m-%d").to_string();
-
-        format!(
-            "repo:{} is:pr is:open created:>{}",
-            self.repo, formatted_date
-        )
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     tracing_subscriber::registry()
@@ -76,10 +58,8 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let args = Args::parse();
 
-    let query = args.query();
-
     trace!(
-        query = query,
+        repo = args.repo,
         to = format!("{:?}", args.send_to),
         from = format!("{:?}", args.from)
     );
@@ -92,17 +72,13 @@ async fn main() -> Result<(), anyhow::Error> {
         .build()?;
 
     // Getting pull requests
-    let pull_requests = gh_client
-        .pull_requests(gh::pull_requests_view::Variables { query })
-        .await?;
+    let summary = gh_client.pull_requests_summary(&args.repo).await?;
 
-    // info!(data = serde_json::to_string(&pull_requests).unwrap());
+    if let Some(summary) = summary {
+        info!(summary = serde_json::to_string(&summary).unwrap());
 
-    if !pull_requests.is_empty() {
-        info!(pr_count = pull_requests.len());
-
-        let subject = format!("{} PRs in last 7 days", args.repo);
-        let content = email::render(&subject, &pull_requests)?;
+        let subject = format!("Summary of {} PRs in last 7 days", args.repo);
+        let content = email::render(&subject, &summary)?;
 
         trace!(email_subject = subject, email_content = content);
 
@@ -116,8 +92,6 @@ async fn main() -> Result<(), anyhow::Error> {
         sender
             .send(&subject, args.from, args.send_to, content)
             .await?;
-    } else {
-        warn!("No PR found for the last 7 days");
     }
 
     Ok(())
