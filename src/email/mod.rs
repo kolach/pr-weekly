@@ -1,7 +1,9 @@
-mod client;
 mod error;
+mod sender;
 
 pub use error::EmailError;
+pub use sender::Sender;
+
 use handlebars::Handlebars;
 use rust_embed::RustEmbed;
 use serde::Serialize;
@@ -10,7 +12,7 @@ use serde::Serialize;
 #[folder = "src/email/templates"]
 struct Assets;
 
-pub fn render<T>(pulls: &Vec<T>) -> Result<String, EmailError>
+pub fn render<T>(subject: &str, pulls: &Vec<T>) -> Result<String, EmailError>
 where
     T: Serialize,
 {
@@ -19,7 +21,7 @@ where
     hbs.register_escape_fn(handlebars::no_escape);
 
     let data = serde_json::json!({
-        "subject": "Pull Requests",
+        "subject": subject,
         "pulls": pulls,
     });
 

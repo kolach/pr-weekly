@@ -4,6 +4,7 @@ mod gh;
 use chrono::{Duration, Utc};
 // use kv_log_macro as log;
 use clap::Parser;
+use lettre::message::Mailbox;
 use std::fs::File;
 use std::io::Write;
 use tracing::*;
@@ -28,7 +29,27 @@ struct Args {
 
     /// Email address to send report
     #[arg(short, long)]
-    send_to: String,
+    send_to: Mailbox,
+
+    /// Email is sent from
+    #[arg(short, long, env)]
+    from: Mailbox,
+
+    /// SMTP host
+    #[arg(long, env)]
+    smtp_host: String,
+
+    /// SMTP port
+    #[arg(long, env, default_value_t = 2525)]
+    smtp_port: u16,
+
+    /// SMTP credentials user
+    #[arg(long, env)]
+    smtp_user: String,
+
+    /// SMTP credencials pass
+    #[arg(long, env)]
+    smtp_pass: String,
 }
 
 impl Args {
@@ -60,7 +81,12 @@ async fn main() -> Result<(), anyhow::Error> {
     let args = Args::parse();
 
     let query = args.query();
-    debug!(query = query);
+
+    trace!(
+        query = query,
+        to = format!("{:?}", args.send_to),
+        from = format!("{:?}", args.from)
+    );
 
     // Building GH client
     let gh_client = gh::Client::builder()
@@ -79,13 +105,28 @@ async fn main() -> Result<(), anyhow::Error> {
     if let Some(pull_requests) = pull_requests {
         info!(pr_count = pull_requests.len());
 
-        let content = email::render(&pull_requests)?;
-        // Create a file
-        let mut html_file = File::create("index.html").expect("creation failed");
-        // Write contents to the file
-        html_file.write(content.as_bytes()).expect("write failed");
+        let subject = format!("{} PRs in last 7 days", args.repo);
+        let content = email::render(&subject, &pull_requests)?;
+
+        trace!(email_subject = subject, email_content = content);
+
+        let sender = email::Sender::new(
+            args.smtp_host,
+            args.smtp_port,
+            args.smtp_user,
+            args.smtp_pass,
+        );
+
+        sender
+            .send(&subject, args.from, args.send_to, content)
+            .await?;
+
+        // // Create a file
+        // let mut html_file = File::create("index.html").expect("creation failed");
+        // // Write contents to the file
+        // html_file.write(content.as_bytes()).expect("write failed");
     } else {
-        warn!("No PR found for last 7 days");
+        warn!("No PR found for the last 7 days");
     }
 
     Ok(())
